@@ -32,7 +32,7 @@ def CatchPICFromVideo(window_name, camera_idx, catch_pic_num, path_name):
     cap = cv2.VideoCapture(camera_idx, cv2.CAP_DSHOW)
 
     # 告诉OpenCV使用人脸识别分类器
-    classfier = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+    classfier = cv2.CascadeClassifier("model/haarcascade_frontalface_default.xml")
 
     # 识别出人脸后要画的边框的颜色，RGB格式
     color = (0, 255, 0)
