@@ -1,7 +1,8 @@
 import cv2
 import sys
 from face_train import Model
-from load_dataset import json_labels_read_from_file
+from load_dataset import json_labels_read_from_file, IMAGE_SIZE
+import tensorflow as tf
 
 if __name__ == '__main__':
     if len(sys.argv) != 1:
@@ -42,21 +43,32 @@ if __name__ == '__main__':
             for faceRect in faceRects:
                 x, y, w, h = faceRect
 
-                # 截取脸部图像提交给模型识别这是谁
-                image = frame[y: y + h, x: x + w]  # (改)
-                faceID = model.face_predict(image)
+                if w > 200:
+                    # 截取脸部图像提交给模型识别这是谁
+                    #image = frame[y - 10: y + h + 10, x - 10: x + w + 10]
+                    #image = frame[y: y + h, x: x + w]  # (改)
+                    image = frame[y - 10: y + h + 10, x - 10: x + w + 10]
+                    if image is None:  # 有的时候可能是人脸探测有问题，会报错 error (-215) ssize.width > 0 && ssize.height > 0 in function cv::resize，所以这里要判断一下image是不是None，防止极端情况 https://blog.csdn.net/qq_30214939/article/details/77432167
+                        break
+                    else:
+                        faceID = model.face_predict(image)
 
-                print('faceID: %d' % faceID)
+                    img_name = '%s/%d.png' % ('./data/temp', 1)
 
-                cv2.rectangle(frame, (x - 10, y - 10), (x + w + 10, y + h + 10), color, thickness=2)
-                # face_id判断（改）
-                # 文字提示是谁
-                cv2.putText(frame, classes.get(str(faceID)),
-                            (x + 30, y + 30),  # 坐标
-                            cv2.FONT_HERSHEY_SIMPLEX,  # 字体
-                            1,  # 字号
-                            (255, 0, 255),  # 颜色
-                            2)  # 字的线宽
+                    if image.size > 0:
+                        cv2.imwrite(img_name, image)
+
+                    print('faceID: %d' % faceID)
+
+                    cv2.rectangle(frame, (x - 10, y - 10), (x + w + 10, y + h + 10), color, thickness=2)
+                    # face_id判断（改）
+                    # 文字提示是谁
+                    cv2.putText(frame, classes.get(str(faceID)),
+                                (x + 30, y + 30),  # 坐标
+                                cv2.FONT_HERSHEY_SIMPLEX,  # 字体
+                                1,  # 字号
+                                (255, 0, 255),  # 颜色
+                                2)  # 字的线宽
 
         cv2.imshow("login", frame)
 

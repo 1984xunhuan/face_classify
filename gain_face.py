@@ -53,7 +53,7 @@ def CatchPICFromVideo(window_name, camera_idx, catch_pic_num, path_name):
                 if w > 200:
 
                     # 将当前帧保存为图片
-                    img_name = '%s/%d.jpg' % (path_name, num)
+                    img_name = '%s/%d.png' % (path_name, num)
 
                     image = frame[y - 10: y + h + 10, x - 10: x + w + 10]
                     # image = grey[y:y + h, x:x + w]  # 保存灰度人脸图

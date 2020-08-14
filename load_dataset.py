@@ -33,7 +33,7 @@ def read_and_decode(example_string):
     image = tf.reshape(image, [IMAGE_SIZE, IMAGE_SIZE, 3])
     print(image.shape)
 
-    image = tf.cast(image, tf.float32) * (1. / 255)  # 归一化
+    image = tf.cast(image, tf.float32) * (1. / 255) - 0.5 # 归一化
     label = tf.cast(label, dtype='int32')
     return image, label
 

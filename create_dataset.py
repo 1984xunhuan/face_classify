@@ -4,6 +4,8 @@ from PIL import Image
 import json
 import codecs
 
+from load_dataset import IMAGE_SIZE
+
 # 源数据地址
 cwd = 'data'
 # 生成record路径及文件名
@@ -22,10 +24,8 @@ def json_labels_read_from_file(file_path):
 
 classes = json_labels_read_from_file('dataset/labels.json')
 
-IMAGE_SIZE = 64
 
-
-def create_train_record():
+def create_train_record(rate):
     """创建训练集tfrecord"""
     writer = tf.io.TFRecordWriter(train_record_path)  # 创建一个writer
     NUM = 1  # 显示创建过程（计数）
@@ -34,7 +34,7 @@ def create_train_record():
         index = int(index)
         print("index: %d, name: %s" % (index, name))
         class_path = cwd + "/" + name + '/'
-        l = int(len(os.listdir(class_path)) * 0.7)  # 取前70%创建训练集
+        l = int(len(os.listdir(class_path)) * rate)  # 取前70%创建训练集
         print('==============l: %d' % l)
         for img_name in os.listdir(class_path)[:l]:
             img_path = class_path + img_name
@@ -59,7 +59,7 @@ def create_train_record():
     print("Create train_record successful!")
 
 
-def create_test_record():
+def create_test_record(rate):
     """创建测试tfrecord"""
     writer = tf.io.TFRecordWriter(test_record_path)
     NUM = 1
@@ -67,7 +67,7 @@ def create_test_record():
         index = int(index)
         print("index: %d, name: %s" % (index, name))
         class_path = cwd + '/' + name + '/'
-        l = int(len(os.listdir(class_path)) * 0.7)
+        l = int(len(os.listdir(class_path)) * rate)
         for img_name in os.listdir(class_path)[l:]:  # 剩余30%作为测试集
             img_path = class_path + img_name
 
@@ -127,8 +127,8 @@ def json_labels_write_to_file(file_path, dict_data):
 
 
 def main():
-    create_train_record()
-    create_test_record()
+    create_train_record(1)
+    #create_test_record(0.7)
 
 
 if __name__ == '__main__':

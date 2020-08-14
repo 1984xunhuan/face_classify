@@ -14,7 +14,7 @@ while True:
         # 采集员工图像的数量自己设定，越多识别准确度越高，但训练速度贼慢
         window_name = '信息采集'  # 图像窗口
         camera_id = 0  # 相机的ID号
-        images_num = 200  # 采集图片数量
+        images_num = 500  # 采集图片数量
         path = 'data/' + new_user_name  # 图像保存位置
         CatchPICFromVideo(window_name, camera_id, images_num, path)
     else:
