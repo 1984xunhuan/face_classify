@@ -2,6 +2,7 @@ import codecs
 import json
 import cv2
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 
 IMAGE_SIZE = 64
@@ -71,6 +72,25 @@ def resize_image(image, height=IMAGE_SIZE, width=IMAGE_SIZE):
 
     return cv2.resize(constant_image, (height, width))
 
+
+def check_dataset(dataset):
+    dataset.test_images[0]
+    print(dataset.test_labels[0])
+
+    for i in range(16):
+        print(i // 4)
+        plt.subplot(4, 4, i + 1)
+        dataset.test_images[i] = (dataset.test_images[i] + 0.5) * 255
+        image = tf.cast(dataset.test_images[i], tf.uint8)
+        label = dataset.test_labels[i]
+        print(label)
+        label = label.tolist()
+        label_index = label.index(max(label))
+        print(label_index)
+        name = classes.get(str(label_index))
+        plt.title(name)
+        plt.imshow(image)
+    plt.show()
 
 if __name__ == '__main__':
     print(tf.__version__)

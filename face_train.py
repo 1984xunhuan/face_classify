@@ -2,25 +2,19 @@
 # 人脸特征训练
 ########################
 
-import os
 import random
 import tensorflow as tf
 import numpy as np
 import keras
+import matplotlib.pyplot as plt
 from keras import backend as K
-from keras.layers import Convolution2D, MaxPooling2D, Conv2D
+from keras.layers import MaxPooling2D, Conv2D
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.models import Sequential
 from keras.models import load_model
-from keras.optimizers import SGD,Adam
 from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import np_utils
 from sklearn.model_selection import train_test_split
-
 from load_dataset import load_dataset, resize_image, IMAGE_SIZE, json_labels_read_from_file
-
-import cv2
-from PIL import Image
 
 '''
 对数据集的处理，包括：
@@ -30,6 +24,8 @@ from PIL import Image
 4、对数据集中的标签进行One-hot编码
 5、数据归一化
 '''
+
+
 class Dataset:
     def __init__(self, path_name):
         # 训练集
@@ -61,8 +57,8 @@ class Dataset:
         images = np.array(images)
         labels = np.array(labels)
 
-        train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.3,
-                                                                                random_state=random.randint(0, 100))
+        train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.2,
+                                                                                random_state=0, stratify=labels)
 
         # tensorflow 作为后端，数据格式约定是channel_last，与这里数据本身的格式相符，如果是channel_first，就要对数据维度顺序进行一下调整
         if K.image_data_format == 'channel_first':
@@ -85,6 +81,7 @@ class Dataset:
         self.train_labels = train_labels
         self.test_labels = test_labels
 
+
 # CNN网络模型类
 class Model:
     def __init__(self):
@@ -93,7 +90,8 @@ class Model:
     def build_model(self, nb_classes=2):
         self.model = Sequential()
         self.model.add(Conv2D(32, (3, 3), padding='same',
-                              input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3)))  # 当使用该层作为模型第一层时，需要提供 input_shape 参数 （整数元组，不包含batch_size）
+                              input_shape=(
+                                  IMAGE_SIZE, IMAGE_SIZE, 3)))  # 当使用该层作为模型第一层时，需要提供 input_shape 参数 （整数元组，不包含batch_size）
         self.model.add(Activation('relu'))
         self.model.add(Conv2D(32, (3, 3)))
         self.model.add(Activation('relu'))
@@ -116,18 +114,17 @@ class Model:
 
     # 训练模型
     def train(self, dataset, batch_size=64, nb_epoch=15, data_augmentation=True):
-        logdir='./logs'
-        checkpoint_path='./checkpoint/face.{epoch:02d}-{val_loss:.2f}.ckpt'
+        log_dir = './logs'
+        checkpoint_path = './checkpoint/face.{epoch:02d}-{val_loss:.2f}.ckpt'
 
         callbacks = [
-            tf.keras.callbacks.TensorBoard(log_dir=logdir,
+            tf.keras.callbacks.TensorBoard(log_dir=log_dir,
                                            histogram_freq=2),
             tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
                                                save_weights_only=True,
                                                verbose=1,
                                                period=5)
         ]
-
 
         self.model.compile(loss='categorical_crossentropy',
                            optimizer='ADAM',
@@ -141,23 +138,28 @@ class Model:
                            batch_size=batch_size,
                            epochs=nb_epoch,
                            validation_split=0.2,
+                           #validation_data=(dataset.test_images, dataset.test_labels),
                            callbacks=callbacks,
                            shuffle=True)
         # 使用实时数据提升
         else:
-            datagen = ImageDataGenerator(rotation_range=20,
-                                         width_shift_range=0.2,
-                                         height_shift_range=0.2,
-                                         horizontal_flip=True)
+            datagen = ImageDataGenerator(
+                rotation_range=20,
+                width_shift_range=0.2,
+                height_shift_range=0.2,
+                horizontal_flip=True)
 
             # 利用生成器开始训练模型
-            self.model.fit_generator(datagen.flow(dataset.train_images, dataset.train_labels, batch_size=batch_size),
+            self.model.fit_generator(datagen.flow(dataset.train_images, dataset.train_labels,
+                                                  batch_size=batch_size, shuffle=True),
+                                     steps_per_epoch=len(dataset.train_images) // batch_size,
                                      epochs=nb_epoch,
                                      callbacks=callbacks,
                                      validation_data=(dataset.test_images, dataset.test_labels),
+                                     validation_steps=len(dataset.test_images) // batch_size,
                                      shuffle=True)
 
-    MODEL_PATH = './model.tf'
+    MODEL_PATH = './model/model.tf'
 
     def save_model(self, file_path=MODEL_PATH):
         self.model.save(file_path)
@@ -180,8 +182,8 @@ class Model:
             image = image.reshape((1, IMAGE_SIZE, IMAGE_SIZE, 3))
 
         # 浮点并归一化
-        #image = image.astype('float32')
-        #image /= 255
+        # image = image.astype('float32')
+        # image /= 255
         image = tf.cast(image, tf.float32) * (1. / 255) - 0.5  # 归一化
 
         # 给出输入属于各个类别的概率
@@ -214,6 +216,6 @@ if __name__ == '__main__':
     print(dataset)
 
     # 测试训练函数的代码
-    model.train(dataset, 64, 15, False)
+    model.train(dataset, 64, 5, False)
     model.evaluate(dataset)
     model.save_model(file_path='./model/face.h5')
