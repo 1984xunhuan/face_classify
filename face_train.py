@@ -137,8 +137,8 @@ class Model:
                            dataset.train_labels,
                            batch_size=batch_size,
                            epochs=nb_epoch,
-                           validation_split=0.2,
-                           #validation_data=(dataset.test_images, dataset.test_labels),
+                           #validation_split=0.2,
+                           validation_data=(dataset.test_images, dataset.test_labels),
                            callbacks=callbacks,
                            shuffle=True)
         # 使用实时数据提升
@@ -216,6 +216,6 @@ if __name__ == '__main__':
     print(dataset)
 
     # 测试训练函数的代码
-    model.train(dataset, 64, 5, False)
+    model.train(dataset, 64, 15, False)
     model.evaluate(dataset)
     model.save_model(file_path='./model/face.h5')
